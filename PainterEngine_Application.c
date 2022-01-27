@@ -7,18 +7,18 @@ PX_Application App;
 PX_FontModule fm;
 PX_Object *root;
 PX_Object *messagebox;
-PX_Object *explorer;
+//PX_Object *explorer;
 
 /////////////////// init world /////////////////////////
 
-px_short worldMap[2][2187][2187]; // 地图 (3^7 * 3^7)
-px_short currentMap = 0;          // 当前使用的worldMap
-px_short map3x3[3][3];
-px_short map9x9[9][9];
-px_short map27x27[27][27];
-px_short map81x81[81][81];
-px_short map243x243[243][243];
-px_short map729x729[729][729];
+px_bool worldMap[2][2187][2187]; // 地图 (3^7 * 3^7)
+px_bool currentMap = 0;          // 当前使用的worldMap
+px_bool map3x3[3][3];
+px_bool map9x9[9][9];
+px_bool map27x27[27][27];
+px_bool map81x81[81][81];
+px_bool map243x243[243][243];
+px_bool map729x729[729][729];
 
 /////////////////// init values /////////////////////////
 
@@ -62,16 +62,16 @@ px_bool PX_ApplicationInitialize(PX_Application *pApp, px_int screen_width, px_i
     if (!PX_LoadFontModuleFromFile(&fm, "../assets/utf8_32.pxf")) return PX_FALSE;
     root = PX_ObjectCreate(&pApp->runtime.mp_ui, PX_NULL, 0, 0, 0, 0, 0, 0);
     messagebox = PX_Object_MessageBoxCreate(&pApp->runtime.mp_ui, root, &fm);
-/*
-    explorer = PX_Object_ExplorerCreate(&pApp->runtime.mp_ui, PX_NULL, 0, 0,
-                                        pApp->runtime.surface_width,
-                                        pApp->runtime.surface_height, &fm,
-                                        APPExplorerGetPathFolderCount,
-                                        APPExplorerGetPathFileCount,
-                                        APPExplorerGetPathFolderName,
-                                        APPExplorerGetPathFileName, "");
-    PX_Object_ExplorerOpen(explorer);
-*/
+
+//    explorer = PX_Object_ExplorerCreate(&pApp->runtime.mp_ui, PX_NULL, 0, 0,
+//                                        pApp->runtime.surface_width,
+//                                        pApp->runtime.surface_height, &fm,
+//                                        APPExplorerGetPathFolderCount,
+//                                        APPExplorerGetPathFileCount,
+//                                        APPExplorerGetPathFolderName,
+//                                        APPExplorerGetPathFileName, "");
+//    PX_Object_ExplorerOpen(explorer);
+
     red = PX_COLOR(100, 255, 0, 0);
     green = PX_COLOR(50, 0, 255, 0);
     blue = PX_COLOR(100, 0, 0, 255);
@@ -198,15 +198,13 @@ px_void PX_ApplicationPostEvent(PX_Application *pApp, PX_Object_Event e)
         else if (kd == I) status = 1; // i : 105 on mac || 73 on windows
         else if (kd == V) status = 2; // v : 118 on mac || 86 on windows
         else if (kd == G) showGrids = !showGrids; // g : 103 on mac ||  on windows
-        else if (kd == BACKSPACE) deleteSelection(); // BACKSPACE : 127 on mac ||  on windows || 8 on web
+        else if (kd == BACKSPACE) deleteSelection(); // BACKSPACE : 127 on mac || 8 on windows || 8 on web
         else if (kd == MINUS) speed--; // accelerate | speed  up
         else if (kd == EQUAL) speed++; // decelerate | slow down
-        else if (kd == H) // help message
+        else if (kd == Hh) // help message
         {
-            PX_Object_MessageBoxAlertOk(messagebox, "Help Information:\n"
-                                                    "    press <I> to enter Insert mode\n"
-                                                    "    press <V> to enter Visual mode\n"
-                                                    "    press <ESC> to enter Normal mode",
+            PX_Object_MessageBoxAlertOk(messagebox, "HELP: <I> enter Insert mode | <V> enter Visual mode | <ESC> enter Normal mode\n"
+                                                    "<-> slow down | <+> speed up | <G> show grids",
                                         PX_NULL, PX_NULL);
             //3.press <SPACE> to start or stop\n 4.press <G> to show grids\n
         } else printf("keydown not found:%d\n", kd);
@@ -222,10 +220,8 @@ px_void PX_ApplicationPostEvent(PX_Application *pApp, PX_Object_Event e)
         px_int lastPosX = mouse.x, lastPosY = mouse.y; // 备份mouse坐标 x, y
         mouse.x = PX_Object_Event_GetCursorX(e);       // 更新mouse坐标 x
         mouse.y = PX_Object_Event_GetCursorY(e);       // 更新mouse坐标 y
-        px_int X = posRToW(mouse.x, 1), lpX = posRToW(lastPosX, 1), // last position X
-                dpX = posRToW(mouse.downPosX + cellSize / 2, 1); // down position X
-        px_int Y = posRToW(mouse.y, 0), lpY = posRToW(lastPosY, 0), // last position Y
-                dpY = posRToW(mouse.downPosY + cellSize / 2, 0); // down position Y
+        px_int X = posRToW(mouse.x, 1), lpX = posRToW(lastPosX, 1); // last position X
+        px_int Y = posRToW(mouse.y, 0), lpY = posRToW(lastPosY, 0); // last position Y
         if (status == 0)
         {
             screenPosX = (mouse.downPosX - mouse.x) / cellSize + lastScreenPosX;
@@ -255,10 +251,10 @@ px_void PX_ApplicationPostEvent(PX_Application *pApp, PX_Object_Event e)
             }
         } else if (status == 2)
         {
-            selection[0] = min(dpY, posRToW(mouse.y + cellSize / 2, 0)); // up
-            selection[1] = max(dpY, posRToW(mouse.y + cellSize / 2, 0)); // down
-            selection[2] = min(dpX, posRToW(mouse.x + cellSize / 2, 1)); // left
-            selection[3] = max(dpX, posRToW(mouse.x + cellSize / 2, 1)); // right
+            selection[0] = min(posRToW(mouse.downPosY + cellSize / 2, 0), posRToW(mouse.y + cellSize / 2, 0)); // up
+            selection[1] = max(posRToW(mouse.downPosY + cellSize / 2, 0), posRToW(mouse.y + cellSize / 2, 0)); // down
+            selection[2] = min(posRToW(mouse.downPosX + cellSize / 2, 1), posRToW(mouse.x + cellSize / 2, 1)); // left
+            selection[3] = max(posRToW(mouse.downPosX + cellSize / 2, 1), posRToW(mouse.x + cellSize / 2, 1)); // right
             selecting = 1;
         }
     } else if (e.Event == PX_OBJECT_EVENT_CURSORDOWN) // 不是drag就只能是click了
@@ -286,6 +282,10 @@ px_void PX_ApplicationPostEvent(PX_Application *pApp, PX_Object_Event e)
                 if (selecting) selecting = 0;
                 break;
             }
+            default:
+            {
+                break;
+            }
         }
     } else if (e.Event == PX_OBJECT_EVENT_CURSORUP) // 左键抬起
     {
@@ -296,6 +296,8 @@ px_void PX_ApplicationPostEvent(PX_Application *pApp, PX_Object_Event e)
         if (PX_Object_Event_GetCursorIndex(e) > 0) larger(); // 鼠标滚动
         else smaller();
     }
+    if (e.Event == PX_OBJECT_EVENT_DRAGFILE)
+        printf("aaaaaaaaaaaa");
 }
 
 px_void larger()
@@ -400,13 +402,16 @@ px_void caculate()
                                                                             flag[6] = 1;
                                                                             for (int m = k * 3; m < k * 3 + 3; ++m)
                                                                             {
-                                                                                for (int n = l * 3; n < l * 3 + 3; ++n)
+                                                                                for (int n = l * 3;
+                                                                                     n < l * 3 + 3; ++n)
                                                                                 {
 //                                                                                    count++;
                                                                                     countArround = 0;
                                                                                     for (int o = 0; o < 8; ++o)
                                                                                     {
-                                                                                        if (worldMap[currentMap][m + around[1][o]][n + around[0][o]])
+                                                                                        if (worldMap[currentMap][m +
+                                                                                                                 around[1][o]][
+                                                                                                n + around[0][o]])
                                                                                             countArround++;
                                                                                     }
                                                                                     if (countArround) flag[7] = 1;
@@ -414,7 +419,9 @@ px_void caculate()
                                                                                     {
                                                                                         for (int o = 0; o < 8; ++o)
                                                                                         {
-                                                                                            if (worldMap[!currentMap][m + around[1][o]][n + around[0][o]])
+                                                                                            if (worldMap[!currentMap][
+                                                                                                    m + around[1][o]][
+                                                                                                    n + around[0][o]])
                                                                                             {
                                                                                                 flag[7] = 1;
                                                                                                 break;
@@ -423,7 +430,8 @@ px_void caculate()
                                                                                     }
                                                                                     if (worldMap[currentMap][m][n])
                                                                                     {
-                                                                                        if (countArround < 2 || countArround > 3)
+                                                                                        if (countArround < 2 ||
+                                                                                            countArround > 3)
                                                                                             worldMap[!currentMap][m][n] = 0;
                                                                                         else worldMap[!currentMap][m][n] = 1;
                                                                                     } else
@@ -478,24 +486,23 @@ px_int posWToR(px_int pos, px_bool x) // change real mouse position to world pos
 px_int ceilFloor(int number)
 { return (number / cellSize) * cellSize; }
 
-/*
-px_int APPExplorerGetPathFolderCount(const px_char *path, const char *filter)
-{
-    return PX_FileGetDirectoryFileCount(path, PX_FILEENUM_TYPE_FOLDER, filter);
-}
 
-px_int APPExplorerGetPathFileCount(const px_char *path, const char *filter)
-{
-    return PX_FileGetDirectoryFileCount(path, PX_FILEENUM_TYPE_FILE, filter);
-}
-
-px_int APPExplorerGetPathFolderName(const char path[], int count, char FileName[][260], const char *filter)
-{
-    return PX_FileGetDirectoryFileName(path, count, FileName, PX_FILEENUM_TYPE_FOLDER, filter);
-}
-
-px_int APPExplorerGetPathFileName(const char path[], int count, char FileName[][260], const char *filter)
-{
-    return PX_FileGetDirectoryFileName(path, count, FileName, PX_FILEENUM_TYPE_FILE, filter);
-}
-*/
+//px_int APPExplorerGetPathFolderCount(const px_char *path, const char *filter)
+//{
+//    return PX_FileGetDirectoryFileCount(path, PX_FILEENUM_TYPE_FOLDER, filter);
+//}
+//
+//px_int APPExplorerGetPathFileCount(const px_char *path, const char *filter)
+//{
+//    return PX_FileGetDirectoryFileCount(path, PX_FILEENUM_TYPE_FILE, filter);
+//}
+//
+//px_int APPExplorerGetPathFolderName(const char path[], int count, char FileName[][260], const char *filter)
+//{
+//    return PX_FileGetDirectoryFileName(path, count, FileName, PX_FILEENUM_TYPE_FOLDER, filter);
+//}
+//
+//px_int APPExplorerGetPathFileName(const char path[], int count, char FileName[][260], const char *filter)
+//{
+//    return PX_FileGetDirectoryFileName(path, count, FileName, PX_FILEENUM_TYPE_FILE, filter);
+//}
