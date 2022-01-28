@@ -62,12 +62,16 @@ px_bool PX_ApplicationInitialize(PX_Application *pApp, px_int screen_width, px_i
     if (!PX_LoadFontModuleFromFile(&fm, "../assets/utf8_32.pxf")) return PX_FALSE;
     root = PX_ObjectCreate(&pApp->runtime.mp_ui, PX_NULL, 0, 0, 0, 0, 0, 0);
     messagebox = PX_Object_MessageBoxCreate(&pApp->runtime.mp_ui, root, &fm);
-
-//    explorer = PX_Object_ExplorerCreate(&pApp->runtime.mp_ui, PX_NULL, 0, 0,
-//                                        pApp->runtime.surface_width,
-//                                        pApp->runtime.surface_height, &fm,
-//                                        APPExplorerGetPathFolderCount,
-//                                        APPExplorerGetPathFileCount,
+/*
+    explorer = PX_Object_ExplorerCreate(&pApp->runtime.mp_ui, PX_NULL, 0, 0,
+                                        pApp->runtime.surface_width,
+                                        pApp->runtime.surface_height, &fm,
+                                        APPExplorerGetPathFolderCount,
+                                        APPExplorerGetPathFileCount,
+                                        APPExplorerGetPathFolderName,
+                                        APPExplorerGetPathFileName, "");
+    PX_Object_ExplorerOpen(explorer);
+*/
 //                                        APPExplorerGetPathFolderName,
 //                                        APPExplorerGetPathFileName, "");
 //    PX_Object_ExplorerOpen(explorer);
